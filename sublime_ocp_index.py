@@ -15,7 +15,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             return
 
         line = view.substr(sublime.Region(view.line(locations[0]).begin(), locations[0]))
-        match = re.search(r"[,\s]*([A-Z][\w.]+)$", line)
+        match = re.search(r"[,\s]*([A-Z][\w.]*|\w+)$", line)
 
         if match != None:
             (context,) = match.groups()
@@ -30,12 +30,15 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
 
             results = self.run_completion(view.window().folders(), opens, context, length)
 
-            local_idents = []
-            view.find_all(r"let(\s+rec)?\s+([\w']+)", 0, r"\2", local_idents)
-            for local in local_idents:
-                results.append((local + " : let", local))
+            local_defs = []
+            view.find_all(r"let(\s+rec)?\s+(([\w']+\s*)+)=", 0, r"\2", local_defs)
 
-            return results
+            locals = []
+            for definition in set(local_defs):
+                for local in str.split(definition):
+                    locals.append((local + " : let", local))
+
+            return results + list(set(locals))
 
     def run_completion(self, includes, opens, query, length):
         args = ['ocp-index', 'complete']
