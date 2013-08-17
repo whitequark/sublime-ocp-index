@@ -24,6 +24,10 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             header = view.substr(sublime.Region(0, 4096))
             opens  = re.findall(r"^open ([\w.]+)$", header, flags=re.MULTILINE)
 
+            if view.file_name() != None:
+                (module,) = re.search(r"(\w+)\.ml.*$", view.file_name()).groups()
+                opens.append(module.capitalize())
+
             return self.run_completion(view.window().folders(), opens, context, length)
 
     def run_completion(self, includes, opens, query, length):
