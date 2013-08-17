@@ -37,14 +37,25 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
 
             return results
 
-    def on_close(self, view):
-        self.local_cache.pop(view.buffer_id())
+    if int(sublime.version()) < 3014:
+        def on_close(self, view):
+            self.local_cache.pop(view.buffer_id())
 
-    def on_load(self, view):
-        self.extract_locals(view)
+        def on_load(self, view):
+            self.extract_locals(view)
 
-    def on_post_save(self, view):
-        self.extract_locals(view)
+        def on_post_save(self, view):
+            self.extract_locals(view)
+
+    else:
+        def on_close_async(self, view):
+            self.local_cache.pop(view.buffer_id())
+
+        def on_load_async(self, view):
+            self.extract_locals(view)
+
+        def on_post_save_async(self, view):
+            self.extract_locals(view)
 
     def run_completion(self, includes, opens, query, length):
         args = ['ocp-index', 'complete']
