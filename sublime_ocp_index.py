@@ -3,7 +3,7 @@ import sublime
 import subprocess
 import re
 
-class OCamlAutocomplete(sublime_plugin.EventListener):
+class SublimeOCPIndex(sublime_plugin.EventListener):
 
     def on_query_completions(self, view, prefix, locations):
         if len(locations) != 1:
