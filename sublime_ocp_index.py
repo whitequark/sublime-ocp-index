@@ -28,7 +28,14 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
                 (module,) = re.search(r"(\w+)\.ml.*$", view.file_name()).groups()
                 opens.append(module.capitalize())
 
-            return self.run_completion(view.window().folders(), opens, context, length)
+            results = self.run_completion(view.window().folders(), opens, context, length)
+
+            local_idents = []
+            view.find_all(r"let(\s+rec)?\s+([\w']+)", 0, r"\2", local_idents)
+            for local in local_idents:
+                results.append((local + " : let", local))
+
+            return results
 
     def run_completion(self, includes, opens, query, length):
         args = ['ocp-index', 'complete']
