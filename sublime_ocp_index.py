@@ -20,14 +20,22 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
         if match != None:
             (context,) = match.groups()
             length = len(context) - len(prefix)
-            return self.run_completion(view.window().folders(), context, length)
 
-    def run_completion(self, includes, query, length):
+            header = view.substr(sublime.Region(0, 4096))
+            opens  = re.findall(r"^open ([\w.]+)$", header, flags=re.MULTILINE)
+
+            return self.run_completion(view.window().folders(), opens, context, length)
+
+    def run_completion(self, includes, opens, query, length):
         args = ['ocp-index', 'complete']
 
         for include in includes:
             args.append('-I')
             args.append(include)
+
+        for open in opens:
+            args.append('-O')
+            args.append(open)
 
         args.append(query)
 
