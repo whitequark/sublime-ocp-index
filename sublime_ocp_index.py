@@ -5,6 +5,8 @@ import re
 
 class SublimeOCPIndex(sublime_plugin.EventListener):
 
+    local_cache = dict()
+
     def on_query_completions(self, view, prefix, locations):
         if len(locations) != 1:
             return
@@ -28,17 +30,21 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
                 (module,) = re.search(r"(\w+)\.ml.*$", view.file_name()).groups()
                 opens.append(module.capitalize())
 
-            results = self.run_completion(view.window().folders(), opens, context, length)
+            results  = self.run_completion(view.window().folders(), opens, context, length)
 
-            local_defs = []
-            view.find_all(r"let(\s+rec)?\s+(([\w']+\s*)+)=", 0, r"\2", local_defs)
+            if view.buffer_id() in self.local_cache:
+                results += self.local_cache[view.buffer_id()]
 
-            locals = []
-            for definition in set(local_defs):
-                for local in str.split(definition):
-                    locals.append((local + " : let", local))
+            return results
 
-            return results + list(set(locals))
+    def on_close(self, view):
+        self.local_cache.pop(view.buffer_id())
+
+    def on_load(self, view):
+        self.extract_locals(view)
+
+    def on_post_save(self, view):
+        self.extract_locals(view)
 
     def run_completion(self, includes, opens, query, length):
         args = ['ocp-index', 'complete']
@@ -69,3 +75,14 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
                 result.append((replacement + " : " + rest, actual_replacement))
 
         return result
+
+    def extract_locals(self, view):
+        local_defs = []
+        view.find_all(r"let(\s+rec)?\s+(([\w']+\s*)+)=", 0, r"\2", local_defs)
+
+        locals = set()
+        for definition in local_defs:
+            for local in str.split(definition):
+                locals.add((local + " : let", local))
+
+        self.local_cache[view.buffer_id()] = list(locals)
