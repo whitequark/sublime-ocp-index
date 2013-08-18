@@ -30,7 +30,12 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
                 (module,) = re.search(r"(\w+)\.ml.*$", view.file_name()).groups()
                 opens.append(module.capitalize())
 
-            results  = self.run_completion(view.window().folders(), opens, context, length)
+            results = []
+
+            if prefix == "_":
+                results.append(('_', '_'))
+
+            results += self.run_completion(view.window().folders(), opens, context, length)
 
             if view.buffer_id() in self.local_cache:
                 results += self.local_cache[view.buffer_id()]
