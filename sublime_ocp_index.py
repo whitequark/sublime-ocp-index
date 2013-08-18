@@ -94,12 +94,13 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
 
     def extract_locals(self, view):
         local_defs = []
-        view.find_all(r"let(\s+rec)?\s+(([\w']+\s*)+)=", 0, r"\2", local_defs)
-        view.find_all(r"fun\s+(([\w']+\s*)+)->", 0, r"\1", local_defs)
+        view.find_all(r"let(\s+rec)?\s+(([?~]?[\w']+\s*)+)=", 0, r"\2", local_defs)
+        view.find_all(r"fun\s+(([?~]?[\w']+\s*)+)->", 0, r"\1", local_defs)
 
         locals = set()
         for definition in local_defs:
             for local in str.split(definition):
+                (local,) = re.match(r"^[?~]?(.+)", local).groups()
                 locals.add((local + " : let", local))
 
         self.local_cache[view.buffer_id()] = list(locals)
