@@ -17,7 +17,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             return
 
         line = view.substr(sublime.Region(view.line(locations[0]).begin(), locations[0]))
-        match = re.search(r"[,\s]*([A-Z][\w.]*|\w+)$", line)
+        match = re.search(r"[,\s]*([A-Z][\w.']*|\w+)$", line)
 
         if match != None:
             (context,) = match.groups()
@@ -90,6 +90,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
     def extract_locals(self, view):
         local_defs = []
         view.find_all(r"let(\s+rec)?\s+(([\w']+\s*)+)=", 0, r"\2", local_defs)
+        view.find_all(r"fun\s+(([\w']+\s*)+)->", 0, r"\1", local_defs)
 
         locals = set()
         for definition in local_defs:
