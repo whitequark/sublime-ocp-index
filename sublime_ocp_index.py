@@ -12,8 +12,9 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             return
 
         (location,) = locations
+        scopes      = set(view.scope_name(location).split(" "))
 
-        if "source.ocaml" not in view.scope_name(location).split(" "):
+        if len({"source.ocaml", "source.ocamllex", "source.ocamlyacc"} & scopes) == 0:
             return
 
         line = view.substr(sublime.Region(view.line(locations[0]).begin(), locations[0]))
