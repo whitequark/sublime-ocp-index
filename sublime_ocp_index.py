@@ -14,7 +14,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
         (location,) = locations
         scopes      = set(view.scope_name(location).split(" "))
 
-        if len({"source.ocaml", "source.ocamllex", "source.ocamlyacc"} & scopes) == 0:
+        if len(set(["source.ocaml", "source.ocamllex", "source.ocamlyacc"]) & scopes) == 0:
             return
 
         line = view.substr(sublime.Region(view.line(locations[0]).begin(), locations[0]))
@@ -80,7 +80,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
 
-        output   = str(proc.stdout.read(), encoding='utf-8').strip()
+        output   = proc.stdout.read().encode('utf8').strip()
         variants = re.sub(r"\n\s+", " ", output).split("\n")
 
         result = []
@@ -100,7 +100,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
 
         locals = set()
         for definition in local_defs:
-            for local in str.split(definition):
+            for local in str.split(definition.encode('utf-8')):
                 (local,) = re.match(r"^[?~]?(.+)", local).groups()
                 locals.add((local + " : let", local))
 
