@@ -89,7 +89,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             if variant.count(" ") > 0:
                 (replacement, rest) = str.split(variant, " ", 1)
                 actual_replacement = replacement[length:]
-                result.append((replacement + " : " + rest, actual_replacement))
+                result.append((replacement + "\t" + rest, actual_replacement))
 
         return result
 
@@ -102,6 +102,6 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
         for definition in local_defs:
             for local in str.split(definition):
                 (local,) = re.match(r"^[?~]?(.+)", local).groups()
-                locals.add((local + " : let", local))
+                locals.add((local + "\tlet", local))
 
         self.local_cache[view.buffer_id()] = list(locals)
