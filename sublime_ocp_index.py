@@ -41,7 +41,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             if view.buffer_id() in self.local_cache:
                 results += self.local_cache[view.buffer_id()]
 
-            return results
+            return results, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
 
     if int(sublime.version()) < 3014:
         def on_close(self, view):
