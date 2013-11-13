@@ -80,7 +80,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
 
-        output   = proc.stdout.read().encode('utf8').strip()
+        output   = proc.stdout.read().decode('utf-8').strip()
         variants = re.sub(r"\n\s+", " ", output).split("\n")
 
         result = []
@@ -100,7 +100,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
 
         locals = set()
         for definition in local_defs:
-            for local in str.split(definition.encode('utf-8')):
+            for local in str.split(definition):
                 (local,) = re.match(r"^[?~]?(.+)", local).groups()
                 locals.add((local + " : let", local))
 
