@@ -43,7 +43,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             return
 
         line = view.substr(sublime.Region(view.line(locations[0]).begin(), locations[0]))
-        match = re.search(r"[,\s]*([A-Z][\w_.']*|[\w_]+)$", line)
+        match = re.search(r"[,\s]*([A-Z][\w_.#']*|[\w_]+)$", line)
 
         if match != None:
             (context,) = match.groups()
