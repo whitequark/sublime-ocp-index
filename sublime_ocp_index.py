@@ -36,8 +36,6 @@ class SublimeOCPIndex():
 
         args.append(query)
 
-        print(args)
-
         proc = subprocess.Popen(args,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
