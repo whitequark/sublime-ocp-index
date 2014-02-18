@@ -19,6 +19,8 @@ This plugin uses `ocp-index -I <folder>` to enable searching local project libra
 
     "autocomplete-local-ocaml-packages": false
 
+This can be applied in your user settings, and overridden in a `.sublime-project` file.
+
 ## Build configuration
 
 You need to pass the `-bin-annot` flag to ocamlc/ocamlopt. You are probably using a build system, so follow the guide below.

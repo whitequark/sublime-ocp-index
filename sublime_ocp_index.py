@@ -12,14 +12,20 @@ localInclude = DEFAULT_INCLUDE
 class SublimeOCPIndex():
     local_cache = dict()
 
-    def run_ocp(self, command, includes, opens, query, length, buildDir):
+    def run_ocp(self, command, includes, opens, query, length, settings):
         args = ['ocp-index', command]
 
-        if localInclude:
+        allowInclude = localInclude
+        viewInclude = settings.get('autocomplete-local-ocaml-packages')
+        if viewInclude is not None:
+            allowInclude = viewInclude
+
+        if allowInclude:
             for include in includes:
                 args.append('-I')
                 args.append(include)
 
+        buildDir = settings.get('ocamlbuild_dir')
         if buildDir is not None:
             args.append('--build')
             args.append(buildDir)
@@ -65,9 +71,9 @@ class SublimeOCPIndex():
                 opens.append(module.capitalize())
 
 
-            buildDir = view.settings().get('ocamlbuild_dir')
+            settings = view.settings()
 
-            return (opens, context, length, buildDir)
+            return (opens, context, length, settings)
         else:
             return None
 
@@ -76,17 +82,17 @@ class SublimeOCPIndex():
         query = self.extract_query(view, endword)
 
         if query is not None:
-            (opens, context, length, buildDir) = query
+            (opens, context, length, settings) = query
 
-            return self.run_ocp('type', view.window().folders(), opens, context, length, buildDir)
+            return self.run_ocp('type', view.window().folders(), opens, context, length, settings)
 
     def query_completions(self, view, prefix, location):
         query = self.extract_query(view, location)
 
         if query is not None:
-            (opens, context, length, buildDir) = query
+            (opens, context, length, settings) = query
 
-            output = self.run_ocp('complete', view.window().folders(), opens, context, length, buildDir)
+            output = self.run_ocp('complete', view.window().folders(), opens, context, length, settings)
 
 
             results = []
@@ -171,23 +177,6 @@ class SublimeOcpTypes(sublime_plugin.TextCommand):
                 displayType = result
 
             self.view.set_status(OCPKEY,"Type: " + displayType)
-
-def plugin_loaded():
-    s = sublime.load_settings('Preferences.sublime-settings')
-
-    def read_pref():
-        include = s.get('autocomplete-local-ocaml-packages')
-        global localInclude
-        if include is not None:
-            localInclude = include
-        else:
-            localInclude = DEFAULT_INCLUDE
-
-    # read initial setting
-    read_pref()
-    # listen for changes
-    s.clear_on_change(OCPKEY)
-    s.add_on_change(OCPKEY, read_pref)
 
 # ST2 backwards compatibility
 if (int(sublime.version()) < 3000):
