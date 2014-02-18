@@ -3,6 +3,31 @@ import sublime
 import subprocess
 import re
 
+DEFAULT_INCLUDE = True
+
+localInclude = DEFAULT_INCLUDE
+
+def plugin_loaded():
+    s = sublime.load_settings('Preferences.sublime-settings')
+
+    def read_pref():
+        include = s.get('autocomplete-local-ocaml-packages')
+        global localInclude
+        if include is not None:
+            localInclude = include
+        else:
+            localInclude = DEFAULT_INCLUDE
+
+    # read initial setting
+    read_pref()
+    # listen for changes
+    s.clear_on_change("OCaml Autocompletion")
+    s.add_on_change("OCaml Autocompletion", read_pref)
+
+# ST2 backwards compatibility
+if (int(sublime.version()) < 3000):
+    plugin_loaded()
+
 class SublimeOCPIndex(sublime_plugin.EventListener):
 
     local_cache = dict()
@@ -18,7 +43,7 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
             return
 
         line = view.substr(sublime.Region(view.line(locations[0]).begin(), locations[0]))
-        match = re.search(r"[,\s]*([A-Z][\w_.']*|[\w_]+)$", line)
+        match = re.search(r"[,\s]*([A-Z][\w_.#']*|[\w_]+)$", line)
 
         if match != None:
             (context,) = match.groups()
@@ -66,9 +91,10 @@ class SublimeOCPIndex(sublime_plugin.EventListener):
     def run_completion(self, includes, opens, query, length):
         args = ['ocp-index', 'complete']
 
-        for include in includes:
-            args.append('-I')
-            args.append(include)
+        if localInclude:
+            for include in includes:
+                args.append('-I')
+                args.append(include)
 
         for open in opens:
             args.append('-O')
