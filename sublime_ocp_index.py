@@ -4,10 +4,6 @@ import subprocess
 import re
 
 OCPKEY = "OCaml Autocompletion"
-DEFAULT_INCLUDE = True
-
-localInclude = DEFAULT_INCLUDE
-
 
 class SublimeOCPIndex():
     local_cache = dict()
@@ -15,10 +11,11 @@ class SublimeOCPIndex():
     def run_ocp(self, command, includes, opens, query, length, settings):
         args = ['ocp-index', command]
 
-        allowInclude = localInclude
         viewInclude = settings.get('autocomplete-local-ocaml-packages')
         if viewInclude is not None:
             allowInclude = viewInclude
+        else:
+            allowInclude = True
 
         if allowInclude:
             for include in includes:
