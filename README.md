@@ -19,13 +19,17 @@ This plugin uses `ocp-index -I <folder>` to enable searching local project libra
 
     "autocomplete-local-ocaml-packages": false
 
-This can be applied in your user settings, and overridden in a `.sublime-project` file.
+This can be applied globally in your user settings, or overridden in a `.sublime-project` file.
 
 ## Build configuration
 
 You need to pass the `-bin-annot` flag to ocamlc/ocamlopt. You are probably using a build system, so follow the guide below.
 
-If you are not using one of the standard build output folders (e.g. `_build` for ocamlbuild) then the setting `ocamlbuild_dir` will be passed as the `--build` parameter to `ocp-index`. This setting can be applied as a user preference or in your `.sublime-project` file.
+If you are not using one of the [standard build output folders](https://github.com/OCamlPro/ocp-index/blob/81ad7ac148bab1188bcf401f8cdd3859730f5aa8/src/indexMisc.ml#L102) then the setting `ocamlbuild_dir` can be used to passed the `--build` parameter to `ocp-index`:
+
+    "ocamlbuild_dir": "gen/ml"
+
+This setting can be applied as a user preference or (recommended) in your `.sublime-project` file.
 
 ### ocamlbuild
 
