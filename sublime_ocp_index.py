@@ -8,7 +8,7 @@ OCPKEY = "OCaml Autocompletion"
 class SublimeOCPIndex():
     local_cache = dict()
 
-    def run_ocp(self, command, includes, opens, query, length, context, settings):
+    def run_ocp(self, command, includes, module, query, length, context, settings):
         args = ['ocp-index', command]
 
         if context is not None:
@@ -31,9 +31,9 @@ class SublimeOCPIndex():
             args.append('--build')
             args.append(buildDir)
 
-        for open in opens:
-            args.append('-O')
-            args.append(open)
+        if module is not None:
+            args.append('-F')
+            args.append(module)
 
         args.append(query)
 
@@ -65,12 +65,12 @@ class SublimeOCPIndex():
             length = 0# len(includes) - len(prefix)
 
             header = view.substr(sublime.Region(0, 4096))
-            opens  = re.findall(r"^open ([\w.]+)$", header, flags=re.MULTILINE)
+            module = None
             context = None
 
             if view.file_name() != None:
-                (module,) = re.search(r"(\w+)\.ml.*$", view.file_name()).groups()
-                opens.append(module.capitalize())
+                (moduleName,) = re.search(r"(\w+)\.ml.*$", view.file_name()).groups()
+                module = moduleName.capitalize()
 
                 (line,col) = view.rowcol(location)
                 context = "%s:%d,%d" % (view.file_name(), line, col)
@@ -78,7 +78,7 @@ class SublimeOCPIndex():
 
             settings = view.settings()
 
-            return (opens, includes, length, context, settings)
+            return (module, includes, length, context, settings)
         else:
             return None
 
@@ -87,17 +87,17 @@ class SublimeOCPIndex():
         query = self.extract_query(view, endword)
 
         if query is not None:
-            (opens, includes, length, context, settings) = query
+            (module, includes, length, context, settings) = query
 
-            return self.run_ocp('type', view.window().folders(), opens, includes, length, context, settings)
+            return self.run_ocp('type', view.window().folders(), module, includes, length, context, settings)
 
     def query_completions(self, view, prefix, location):
         query = self.extract_query(view, location)
 
         if query is not None:
-            (opens, includes, length, context, settings) = query
+            (module, includes, length, context, settings) = query
 
-            output = self.run_ocp('complete', view.window().folders(), opens, includes, length, context, settings)
+            output = self.run_ocp('complete', view.window().folders(), module, includes, length, context, settings)
 
 
             results = []
