@@ -84,6 +84,11 @@ class SublimeOCPIndex():
 
     def query_type(self, view, location):
         endword = view.word(location).end()
+        while view.substr(endword) is '_':
+            endword = endword + 1
+            if view.substr(endword) is not ' ':
+                endword = view.word(endword).end()
+
         query = self.extract_query(view, endword)
 
         if query is not None:
@@ -94,7 +99,7 @@ class SublimeOCPIndex():
             if (result is None or len(result) == 0):
                 return "Unknown type: '%s'" % queryString
             else:
-                return result
+                return "Type: %s" % result
 
 
     def query_completions(self, view, prefix, location):
@@ -182,7 +187,8 @@ class SublimeOcpTypes(sublime_plugin.TextCommand):
 
             result = sublimeocp.query_type(self.view, locations[0])
 
-            self.view.set_status(OCPKEY,"Type: " + result)
+            if result is not None:
+                self.view.set_status(OCPKEY, result)
 
 # ST2 backwards compatibility
 if (int(sublime.version()) < 3000):
