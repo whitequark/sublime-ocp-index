@@ -61,8 +61,8 @@ class SublimeOCPIndex():
         match = re.search(r"[,\s]*([A-Z][\w_.#']*|[\w_]+)$", line)
 
         if match != None:
-            (includes,) = match.groups()
-            length = 0# len(includes) - len(prefix)
+            (queryString,) = match.groups()
+            length = 0# len(queryString) - len(prefix)
 
             header = view.substr(sublime.Region(0, 4096))
             module = None
@@ -78,7 +78,7 @@ class SublimeOCPIndex():
 
             settings = view.settings()
 
-            return (module, includes, length, context, settings)
+            return (module, queryString, length, context, settings)
         else:
             return None
 
@@ -87,17 +87,23 @@ class SublimeOCPIndex():
         query = self.extract_query(view, endword)
 
         if query is not None:
-            (module, includes, length, context, settings) = query
+            (module, queryString, length, context, settings) = query
 
-            return self.run_ocp('type', view.window().folders(), module, includes, length, context, settings)
+            result = self.run_ocp('type', view.window().folders(), module, queryString, length, context, settings)
+
+            if (result is None or len(result) == 0):
+                return "Unknown type: '%s'" % queryString
+            else:
+                return result
+
 
     def query_completions(self, view, prefix, location):
         query = self.extract_query(view, location)
 
         if query is not None:
-            (module, includes, length, context, settings) = query
+            (module, queryString, length, context, settings) = query
 
-            output = self.run_ocp('complete', view.window().folders(), module, includes, length, context, settings)
+            output = self.run_ocp('complete', view.window().folders(), module, queryString, length, context, settings)
 
 
             results = []
@@ -176,12 +182,7 @@ class SublimeOcpTypes(sublime_plugin.TextCommand):
 
             result = sublimeocp.query_type(self.view, locations[0])
 
-            if (result is None or len(result) == 0):
-                displayType = "Unknown type"
-            else:
-                displayType = result
-
-            self.view.set_status(OCPKEY,"Type: " + displayType)
+            self.view.set_status(OCPKEY,"Type: " + result)
 
 # ST2 backwards compatibility
 if (int(sublime.version()) < 3000):
