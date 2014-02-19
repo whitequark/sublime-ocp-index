@@ -9,9 +9,7 @@
 Within OCaml syntax files:
 
 - Standard sublime autocompletion is completely replaced with OCaml autocompletion
-- Type checking of variables is available via the `alt+a` shortcut, which displays the type in the status bar
-
-There are limitations to this approach, and some scenarios such as inside `let open <module> in` will not find any results.
+- Type inspection of variables is available via the `alt+a` shortcut, which displays the type in the status bar
 
 ## OPAM Configuration
 
