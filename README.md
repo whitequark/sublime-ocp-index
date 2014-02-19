@@ -15,9 +15,9 @@ There are limitations to this approach, and some scenarios such as inside `let o
 
 ## OPAM Configuration
 
-This plugin uses `ocp-index -I <folder>` to enable searching local project libraries. If instead you are using libraries in OPAM, the use of `-I` disables the default ocp-index behaviour to search for and use the OPAM main directory. To switch to showing OPAM libraries in autocomplete results, use the following setting:
+This plugin uses `ocp-index -I <folder>` to enable searching local project libraries. If instead you are using libraries in OPAM, the use of `-I` disables the default ocp-index behaviour of searching for and use the OPAM main directory. To switch to showing OPAM libraries in autocomplete results, use the following setting:
 
-    "autocomplete-local-ocaml-packages": false
+    "sublime_ocp_index_include_local_packages": false
 
 This can be applied globally in your user settings, or overridden in a `.sublime-project` file.
 
@@ -25,9 +25,9 @@ This can be applied globally in your user settings, or overridden in a `.sublime
 
 You need to pass the `-bin-annot` flag to ocamlc/ocamlopt. You are probably using a build system, so follow the guide below.
 
-If you are not using one of the [standard build output folders](https://github.com/OCamlPro/ocp-index/blob/81ad7ac148bab1188bcf401f8cdd3859730f5aa8/src/indexMisc.ml#L102) then the setting `ocamlbuild_dir` can be used to passed the `--build` parameter to `ocp-index`:
+If you are not using one of the [standard build output folders](https://github.com/OCamlPro/ocp-index/blob/81ad7ac148bab1188bcf401f8cdd3859730f5aa8/src/indexMisc.ml#L102) then this setting can be used to passed the `--build` parameter to `ocp-index`:
 
-    "ocamlbuild_dir": "gen/ml"
+    "sublime_ocp_index_build_dir": "gen/ml"
 
 This setting can be applied as a user preference or (recommended) in your `.sublime-project` file.
 

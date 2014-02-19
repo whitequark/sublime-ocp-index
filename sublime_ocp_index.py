@@ -11,7 +11,7 @@ class SublimeOCPIndex():
     def run_ocp(self, command, includes, opens, query, length, settings):
         args = ['ocp-index', command]
 
-        viewInclude = settings.get('autocomplete-local-ocaml-packages')
+        viewInclude = settings.get('sublime_ocp_index_include_local_packages')
         if viewInclude is not None:
             allowInclude = viewInclude
         else:
@@ -22,7 +22,7 @@ class SublimeOCPIndex():
                 args.append('-I')
                 args.append(include)
 
-        buildDir = settings.get('ocamlbuild_dir')
+        buildDir = settings.get('sublime_ocp_index_build_dir')
         if buildDir is not None:
             args.append('--build')
             args.append(buildDir)
