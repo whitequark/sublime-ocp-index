@@ -58,7 +58,7 @@ class SublimeOCPIndex():
 
 
         line = view.substr(sublime.Region(view.line(location).begin(), location))
-        match = re.search(r"[,\s]*([A-Z][\w_.#']*|[\w_]+)$", line)
+        match = re.search(r"[,\s]*([A-Z][\w_.#']*|[\w_#']+)$", line)
 
         if match != None:
             (queryString,) = match.groups()
@@ -84,7 +84,7 @@ class SublimeOCPIndex():
 
     def query_type(self, view, location):
         endword = view.word(location).end()
-        while view.substr(endword) is '_':
+        while view.substr(endword) in ['_', '#', '\'']:
             endword = endword + 1
             if view.substr(endword) is not ' ':
                 endword = view.word(endword).end()
