@@ -8,7 +8,7 @@ OCPKEY = "OCaml Autocompletion"
 class SublimeOCPIndex():
     local_cache = dict()
 
-    def run_ocp(self, command, includes, module, query, length, context, settings):
+    def run_ocp(self, command, includes, module, query, context, settings):
         args = ['ocp-index', command]
 
         if context is not None:
@@ -50,19 +50,11 @@ class SublimeOCPIndex():
             return output
 
     def extract_query(self, view, location):
-        scopes = set(view.scope_name(location).split(" "))
-
-        if len(set(["source.ocaml", "source.ocamllex", "source.ocamlyacc"]) & scopes) == 0:
-            return None
-
-
-
         line = view.substr(sublime.Region(view.line(location).begin(), location))
         match = re.search(r"[,\s]*([A-Z][\w_.#']*|[\w_#']+)$", line)
 
         if match != None:
             (queryString,) = match.groups()
-            length = 0# len(queryString) - len(prefix)
 
             header = view.substr(sublime.Region(0, 4096))
             module = None
@@ -78,7 +70,7 @@ class SublimeOCPIndex():
 
             settings = view.settings()
 
-            return (module, queryString, length, context, settings)
+            return (module, queryString, context, settings)
         else:
             return None
 
@@ -92,9 +84,9 @@ class SublimeOCPIndex():
         query = self.extract_query(view, endword)
 
         if query is not None:
-            (module, queryString, length, context, settings) = query
+            (module, queryString, context, settings) = query
 
-            result = self.run_ocp('type', view.window().folders(), module, queryString, length, context, settings)
+            result = self.run_ocp('type', view.window().folders(), module, queryString, context, settings)
 
             if (result is None or len(result) == 0):
                 return "Unknown type: '%s'" % queryString
@@ -106,9 +98,10 @@ class SublimeOCPIndex():
         query = self.extract_query(view, location)
 
         if query is not None:
-            (module, queryString, length, context, settings) = query
+            (module, queryString, context, settings) = query
+            length = len(queryString) - len(prefix)
 
-            output = self.run_ocp('complete', view.window().folders(), module, queryString, length, context, settings)
+            output = self.run_ocp('complete', view.window().folders(), module, queryString, context, settings)
 
 
             results = []
@@ -125,7 +118,9 @@ class SublimeOCPIndex():
                     results.append((replacement + "\t" + rest, actual_replacement))
 
             if view.buffer_id() in self.local_cache:
-                results += self.local_cache[view.buffer_id()]
+                for local in self.local_cache[view.buffer_id()]:
+                    localActual = local[length:]
+                    results.append((local + "\tlet", localActual))
 
             return results, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
 
@@ -138,7 +133,7 @@ class SublimeOCPIndex():
         for definition in local_defs:
             for local in str.split(definition):
                 (local,) = re.match(r"^[?~]?(.+)", local).groups()
-                locals.add((local + "\tlet", local))
+                locals.add(local)
 
         self.local_cache[view.buffer_id()] = list(locals)
 
@@ -152,6 +147,12 @@ class SublimeOCPEventListener(sublime_plugin.EventListener):
     def on_query_completions(self, view, prefix, locations):
         if len(locations) != 1:
             return
+
+        location = locations[0]
+        scopes = set(view.scope_name(location).split(" "))
+
+        if len(set(["source.ocaml", "source.ocamllex", "source.ocamlyacc"]) & scopes) == 0:
+            return None
 
         return sublimeocp.query_completions(view, prefix, locations[0])
 
