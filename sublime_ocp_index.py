@@ -37,7 +37,11 @@ class SublimeOCPIndex():
 
         args.append(query)
 
+        # Assumes the first folder is the build directory. Usually a safe assumption.
+        cwd = None if len(includes) < 1 else includes[0]
+
         proc = subprocess.Popen(args,
+                    cwd=cwd,
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
 
@@ -99,28 +103,31 @@ class SublimeOCPIndex():
 
         if query is not None:
             (module, queryString, context, settings) = query
-            length = len(queryString) - len(prefix)
 
             output = self.run_ocp('complete', view.window().folders(), module, queryString, context, settings)
 
 
             results = []
+            length = len(queryString) - len(prefix)
 
             if prefix == "_":
                 results.append(('_', '_'))
 
             variants = re.sub(r"\n\s+", " ", output).split("\n")
 
+            def make_result(replacement, rest):
+                actual_replacement = replacement[length:]
+
+                return replacement + "\t" + rest, actual_replacement
+
             for variant in variants:
                 if variant.count(" ") > 0:
-                    (replacement, rest) = str.split(variant, " ", 1)
-                    actual_replacement = replacement[length:]
-                    results.append((replacement + "\t" + rest, actual_replacement))
+                    (replacement, rest) = variant.split(" ", 1)
+                    results.append(make_result(replacement, rest))
 
             if view.buffer_id() in self.local_cache:
                 for local in self.local_cache[view.buffer_id()]:
-                    localActual = local[length:]
-                    results.append((local + "\tlet", localActual))
+                    results.append(make_result(local, "let"))
 
             return results, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
 
@@ -131,7 +138,7 @@ class SublimeOCPIndex():
 
         locals = set()
         for definition in local_defs:
-            for local in str.split(definition):
+            for local in definition.split():
                 (local,) = re.match(r"^[?~]?(.+)", local).groups()
                 locals.add(local)
 
@@ -158,7 +165,8 @@ class SublimeOCPEventListener(sublime_plugin.EventListener):
 
     if int(sublime.version()) < 3014:
         def on_close(self, view):
-            sublimeocp.local_cache.pop(view.buffer_id())
+            if view.buffer_id() in sublimeocp.local_cache:
+                sublimeocp.local_cache.pop(view.buffer_id())
 
         def on_load(self, view):
             sublimeocp.extract_locals(view)
@@ -190,7 +198,3 @@ class SublimeOcpTypes(sublime_plugin.TextCommand):
 
             if result is not None:
                 self.view.set_status(OCPKEY, result)
-
-# ST2 backwards compatibility
-if (int(sublime.version()) < 3000):
-    plugin_loaded()
