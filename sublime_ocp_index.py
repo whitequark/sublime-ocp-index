@@ -118,6 +118,9 @@ class SublimeOCPIndex():
             def make_result(replacement, rest):
                 actual_replacement = replacement[length:]
 
+                # Weird sublime bug, if there are no underscores in the replacement it replaces the module name as well
+                if not '_' in actual_replacement: actual_replacement = replacement
+
                 return replacement + "\t" + rest, actual_replacement
 
             for variant in variants:
