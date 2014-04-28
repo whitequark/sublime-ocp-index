@@ -45,8 +45,10 @@ class SublimeOCPIndex():
                     stdout=subprocess.PIPE,
                     stderr=subprocess.PIPE)
 
-        error  = proc.stderr.read().decode('utf-8').strip()
-        output = proc.stdout.read().decode('utf-8').strip()
+        (stdoutdata, stderrdata) = proc.communicate()
+
+        error  = stderrdata.decode('utf-8').strip()
+        output = stdoutdata.decode('utf-8').strip()
 
         if error:
             return error
