@@ -108,6 +108,24 @@ class SublimeOCPIndex():
             else:
                 return "Type: %s" % result
 
+    def query_locate(self, view, location):
+        # TODO: de-dupe with query_type.... somehow
+        endword = view.word(location).end()
+        while view.substr(endword) in ['_', '#', '\'']:
+            endword = endword + 1
+            if view.substr(endword) is not ' ':
+                endword = view.word(endword).end()
+
+        query = self.extract_query(view, endword)
+
+        if query is not None:
+            (module, queryString, context, settings) = query
+
+            result = self.run_ocp('locate', view.window().folders(), module, queryString, context, settings)
+
+            if not (result is None or len(result) == 0):
+                view.window().open_file(result, sublime.ENCODED_POSITION | sublime.TRANSIENT)
+
 
     def query_completions(self, view, prefix, location):
         query = self.extract_query(view, location)
@@ -171,6 +189,22 @@ class SublimeOCPIndex():
 sublimeocp = SublimeOCPIndex()
 
 class SublimeOCPEventListener(sublime_plugin.EventListener):
+
+    def on_window_command(self, window, command_name, args):
+        if command_name == "goto_definition":
+            view = window.active_view()
+            location = view.sel()[0]
+            scopes = set(view.scope_name(location.begin()).split(" "))
+
+            if len(set(["source.ocaml", "source.ocamllex", "source.ocamlyacc"]) & scopes) > 0:
+                sublimeocp.query_locate(view, location)
+
+                # 'noop' doesn't exist, just here to disable the goto_definition command.
+                #  We could allow the default if ocp-index doesn't find anything, but
+                #  then we get weird results on library functions.
+                return ("sublime_ocp_noop")
+
+        # default return runs command unmodified
 
     def on_query_completions(self, view, prefix, locations):
         if len(locations) != 1:
