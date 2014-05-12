@@ -128,7 +128,7 @@ class SublimeOCPIndex():
                 if variant.count(" ") > 0:
                     (replacement, rest) = variant.split(" ", 1)
                     if rest.startswith("module sig"):
-                        rest = "sig .. end"
+                        rest = "module sig .. end"
                     results.append(make_result(replacement, rest))
 
             if view.buffer_id() in self.local_cache:
