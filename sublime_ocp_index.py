@@ -116,11 +116,14 @@ class SublimeOCPIndex():
 
             variants = re.sub(r"\n\s+", " ", output).split("\n")
 
-            def make_result(replacement, rest):
-                actual_replacement = replacement[length:]
+            opened = []
+            view.find_all(r"open\s+([\w.']+)", 0, r"\1", opened)
+            opened.sort(reverse=True)
 
-                # Weird sublime bug, if there are no underscores in the replacement it replaces the module name as well
+            def make_result(replacement, rest):
                 actual_replacement = replacement
+                for mod in opened:
+                    actual_replacement = actual_replacement.replace(mod + ".", "")
 
                 return replacement + "\t" + rest, actual_replacement
 
