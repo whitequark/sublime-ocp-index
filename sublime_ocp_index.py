@@ -116,7 +116,9 @@ class SublimeOCPIndex():
             length = len(queryString) - len(prefix)
 
             if prefix == "_":
-                results.append(('_', '_'))
+                results.append(('_\t wildcard ', '_'))
+            if prefix == "in":
+                results.append(('in\tkeyword ', 'in'))
 
             variants = re.sub(r"\n\s+", " ", output).split("\n")
 
