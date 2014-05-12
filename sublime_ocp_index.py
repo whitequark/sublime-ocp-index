@@ -35,6 +35,10 @@ class SublimeOCPIndex():
             args.append('-F')
             args.append(module)
 
+        if command == "complete":
+            args.append('-f')
+            args.append('%q %p %k %t')
+
         args.append(query)
 
         # Assumes the first folder is the build directory. Usually a safe assumption.
@@ -116,27 +120,19 @@ class SublimeOCPIndex():
 
             variants = re.sub(r"\n\s+", " ", output).split("\n")
 
-            opened = []
-            view.find_all(r"open\s+([\w.']+)", 0, r"\1", opened)
-            opened.sort(reverse=True)
-
-            def make_result(replacement, rest):
-                actual_replacement = replacement
-                for mod in opened:
-                    actual_replacement = actual_replacement.replace(mod + ".", "")
-
+            def make_result(actual_replacement, replacement, rest):
                 return replacement + "\t" + rest, actual_replacement
 
             for variant in variants:
                 if variant.count(" ") > 0:
-                    (replacement, rest) = variant.split(" ", 1)
+                    (actual_replacement, replacement, rest) = variant.split(" ", 2)
                     if rest.startswith("module sig"):
                         rest = "module sig .. end"
-                    results.append(make_result(replacement, rest))
+                    results.append(make_result(actual_replacement, replacement, rest))
 
             if view.buffer_id() in self.local_cache:
                 for local in self.local_cache[view.buffer_id()]:
-                    results.append(make_result(local, "let"))
+                    results.append(make_result(local, local, "let"))
 
             return results, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
 
