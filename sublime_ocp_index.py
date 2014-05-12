@@ -108,7 +108,6 @@ class SublimeOCPIndex():
 
             output = self.run_ocp('complete', view.window().folders(), module, queryString, context, settings)
 
-
             results = []
             length = len(queryString) - len(prefix)
 
@@ -128,6 +127,8 @@ class SublimeOCPIndex():
             for variant in variants:
                 if variant.count(" ") > 0:
                     (replacement, rest) = variant.split(" ", 1)
+                    if rest.startswith("module sig"):
+                        rest = "sig .. end"
                     results.append(make_result(replacement, rest))
 
             if view.buffer_id() in self.local_cache:
