@@ -8,7 +8,7 @@ OCPKEY = "OCaml Autocompletion"
 class SublimeOCPIndex():
     local_cache = dict()
 
-    def run_ocp(self, command, includes, module, query, context, settings):
+    def run_ocp(self, command, includes, module, query, context, moreArgs, settings):
         args = ['ocp-index', command]
 
         if context is not None:
@@ -35,10 +35,7 @@ class SublimeOCPIndex():
             args.append('-F')
             args.append(module)
 
-        if command == "complete":
-            args.append('-f')
-            args.append('%q %p %k %t')
-
+        args += moreArgs
         args.append(query)
 
         # Assumes the first folder is the build directory. Usually a safe assumption.
@@ -96,7 +93,7 @@ class SublimeOCPIndex():
         if query is not None:
             (module, queryString, context, settings) = query
 
-            result = self.run_ocp('type', view.window().folders(), module, queryString, context, settings)
+            result = self.run_ocp('type', view.window().folders(), module, queryString, context, [], settings)
 
             if (result is None or len(result) == 0):
                 return "Unknown type: '%s'" % queryString
@@ -110,7 +107,13 @@ class SublimeOCPIndex():
         if query is not None:
             (module, queryString, context, settings) = query
 
-            output = self.run_ocp('complete', view.window().folders(), module, queryString, context, settings)
+            if view.file_name().endswith('.mli'):
+                (show, hide) = ('t,m,s,k', 'v,e,c')
+            else:
+                (show, hide) = ('v,e,c,m,k', 't,s,k')
+
+            output = self.run_ocp('complete', view.window().folders(), module, queryString, context,
+                                  ['--format', '%q %p %k %t', '--show', show, '--hide', hide], settings)
 
             results = []
             length = len(queryString) - len(prefix)
@@ -123,7 +126,7 @@ class SublimeOCPIndex():
             variants = re.sub(r"\n\s+", " ", output).split("\n")
 
             def make_result(actual_replacement, replacement, rest):
-                return replacement + "\t" + rest, actual_replacement
+                return replacement + "\t" + rest.strip(), actual_replacement
 
             for variant in variants:
                 if variant.count(" ") > 0:
