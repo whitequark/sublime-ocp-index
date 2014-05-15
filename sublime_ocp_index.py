@@ -121,7 +121,7 @@ class SublimeOCPIndex():
         if query is not None:
             (module, queryString, context, settings) = query
 
-            result = self.run_ocp('locate', view.window().folders(), module, queryString, context, settings)
+            (success, result) = self.run_ocp('locate', view.window().folders(), module, queryString, context, [], settings)
 
             if not (result is None or len(result) == 0):
                 view.window().open_file(result, sublime.ENCODED_POSITION | sublime.TRANSIENT)
