@@ -4,6 +4,7 @@ import subprocess
 import re
 
 OCPKEY = "OCaml Autocompletion"
+DEBUG = False
 
 class SublimeOCPIndex():
     local_cache = dict()
@@ -38,6 +39,9 @@ class SublimeOCPIndex():
         args += moreArgs
         args.append(query)
 
+        if (DEBUG):
+            print("'" + ' '.join(args) + "'")
+
         # Assumes the first folder is the build directory. Usually a safe assumption.
         cwd = None if len(includes) < 1 else includes[0]
 
@@ -52,9 +56,13 @@ class SublimeOCPIndex():
         output = stdoutdata.decode('utf-8').strip()
 
         if error:
-            return error
+            if (DEBUG):
+                print(error)
+            return (False, error)
         else:
-            return output
+            if (DEBUG):
+                print(output)
+            return (True, output)
 
     def extract_query(self, view, location):
         line = view.substr(sublime.Region(view.line(location).begin(), location))
@@ -93,7 +101,7 @@ class SublimeOCPIndex():
         if query is not None:
             (module, queryString, context, settings) = query
 
-            result = self.run_ocp('type', view.window().folders(), module, queryString, context, [], settings)
+            (success, result) = self.run_ocp('type', view.window().folders(), module, queryString, context, [], settings)
 
             if (result is None or len(result) == 0):
                 return "Unknown type: '%s'" % queryString
@@ -112,32 +120,35 @@ class SublimeOCPIndex():
             else:
                 (show, hide) = ('v,e,c,m,k', 't,s,k')
 
-            output = self.run_ocp('complete', view.window().folders(), module, queryString, context,
+            (success, output) = self.run_ocp('complete', view.window().folders(), module, queryString, context,
                                   ['--format', '%q %p %k %t', '--show', show, '--hide', hide], settings)
 
-            results = []
-            length = len(queryString) - len(prefix)
+            if (success is False):
+                results = [(output,"")]
+            else:
+                results = []
+                length = len(queryString) - len(prefix)
 
-            if prefix == "_":
-                results.append(('_\t wildcard ', '_'))
-            if prefix == "in":
-                results.append(('in\tkeyword ', 'in'))
+                if prefix == "_":
+                    results.append(('_\t wildcard ', '_'))
+                if prefix == "in":
+                    results.append(('in\tkeyword ', 'in'))
 
-            variants = re.sub(r"\n\s+", " ", output).split("\n")
+                variants = re.sub(r"\n\s+", " ", output).split("\n")
 
-            def make_result(actual_replacement, replacement, rest):
-                return replacement + "\t" + rest.strip(), actual_replacement
+                def make_result(actual_replacement, replacement, rest):
+                    return replacement + "\t" + rest.strip(), actual_replacement
 
-            for variant in variants:
-                if variant.count(" ") > 0:
-                    (actual_replacement, replacement, rest) = variant.split(" ", 2)
-                    if rest.startswith("module sig"):
-                        rest = "module sig .. end"
-                    results.append(make_result(actual_replacement, replacement, rest))
+                for variant in variants:
+                    if variant.count(" ") > 0:
+                        (actual_replacement, replacement, rest) = variant.split(" ", 2)
+                        if rest.startswith("module sig"):
+                            rest = "module sig .. end"
+                        results.append(make_result(actual_replacement, replacement, rest))
 
-            if view.buffer_id() in self.local_cache:
-                for local in self.local_cache[view.buffer_id()]:
-                    results.append(make_result(local, local, "let"))
+                if view.buffer_id() in self.local_cache:
+                    for local in self.local_cache[view.buffer_id()]:
+                        results.append(make_result(local, local, "let"))
 
             return results, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
 
