@@ -89,8 +89,8 @@ class SublimeOCPIndex():
         else:
             return None
 
-    def query_type(self, view, location):
-        endword = view.word(location).end()
+    def query_type(self, view, region):
+        endword = view.word(region).end()
         while view.substr(endword) in ['_', '#', '\'']:
             endword = endword + 1
             if view.substr(endword) is not ' ':
@@ -247,9 +247,13 @@ class SublimeOCPEventListener(sublime_plugin.EventListener):
 
 class SublimeOcpTypes(sublime_plugin.TextCommand):
         def run(self, enable):
-            locations = self.view.sel()
+            view = self.view
 
-            result = sublimeocp.query_type(self.view, locations[0])
+            region = view.sel()[0]
+            scopes = set(view.scope_name(region.begin()).split(" "))
 
-            if result is not None:
-                self.view.set_status(OCPKEY, result)
+            if len(set(["source.ocaml", "source.ocamllex", "source.ocamlyacc"]) & scopes) > 0:
+                result = sublimeocp.query_type(view, region)
+
+                if result is not None:
+                    view.set_status(OCPKEY, result)
