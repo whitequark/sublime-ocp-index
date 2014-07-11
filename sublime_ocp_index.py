@@ -4,7 +4,7 @@ import subprocess
 import re
 
 OCPKEY = "OCaml Autocompletion"
-DEBUG = False
+DEBUG = True
 
 class SublimeOCPIndex():
     local_cache = dict()
@@ -120,30 +120,34 @@ class SublimeOCPIndex():
             else:
                 (show, hide) = ('v,e,c,m,k', 't,s,k')
 
-            (success, output) = self.run_ocp('complete', view.window().folders(), module, queryString, context,
-                                  ['--format', '%q %p %k %t', '--show', show, '--hide', hide], settings)
+            (success, output) = self.run_ocp('complete',
+                        view.window().folders(), module, queryString, context,
+                        ['--format', '%q %p %k %t', '--show', show, '--hide', hide], settings)
 
             if (success is False):
                 results = [(output,"")]
             else:
                 results = []
-                length = len(queryString) - len(prefix)
 
                 if prefix == "_":
-                    results.append(('_\t wildcard ', '_'))
+                    results.append(('_\t wildcard', '_'))
                 if prefix == "in":
-                    results.append(('in\tkeyword ', 'in'))
+                    results.append(('in\tkeyword', 'in'))
 
                 variants = re.sub(r"\n\s+", " ", output).split("\n")
+                print(variants)
 
                 def make_result(actual_replacement, replacement, rest):
                     return replacement + "\t" + rest.strip(), actual_replacement
 
                 for variant in variants:
-                    if variant.count(" ") > 0:
+                    if variant.count(" ") > 1:
                         (actual_replacement, replacement, rest) = variant.split(" ", 2)
                         if rest.startswith("module sig"):
                             rest = "module sig .. end"
+                        offset = actual_replacement.find(prefix)
+                        if offset > 0:
+                            actual_replacement = actual_replacement[offset:]
                         results.append(make_result(actual_replacement, replacement, rest))
 
                 if view.buffer_id() in self.local_cache:
