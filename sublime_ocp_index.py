@@ -2,6 +2,7 @@ import sublime_plugin
 import sublime
 import subprocess
 import re
+from shutil import which
 
 OCPKEY = "OCaml Autocompletion"
 DEBUG = True
@@ -10,7 +11,12 @@ class SublimeOCPIndex():
     local_cache = dict()
 
     def run_ocp(self, command, includes, module, query, context, moreArgs, settings):
-        args = ['ocp-index', command]
+        bin_path = which('ocp-index')
+        if bin_path is None:
+            opam_process = subprocess.Popen('opam config var bin', stdout=subprocess.PIPE, shell=True)
+            bin_path = opam_process.stdout.read().decode('utf-8').rstrip() + '/ocp-index'
+
+        args = [bin_path, command]
 
         if context is not None:
             args.append('--context')
