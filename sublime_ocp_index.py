@@ -164,6 +164,11 @@ class SublimeOCPIndex():
             return results, sublime.INHIBIT_WORD_COMPLETIONS | sublime.INHIBIT_EXPLICIT_COMPLETIONS
 
     def extract_locals(self, view):
+        region = view.sel()[0]
+        scopes = set(view.scope_name(region.begin()).split(" "))
+        if len(set(["source.ocaml", "source.ocamllex", "source.ocamlyacc"]) & scopes) == 0:
+            return
+
         local_defs = []
         view.find_all(r"let(\s+rec)?\s+(([?~]?[\w']+\s*)+)=", 0, r"\2", local_defs)
         view.find_all(r"fun\s+(([?~]?[\w']+\s*)+)->", 0, r"\1", local_defs)
