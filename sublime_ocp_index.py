@@ -5,7 +5,7 @@ import re
 from shutil import which
 
 OCPKEY = "OCaml Autocompletion"
-DEBUG = True
+DEBUG = False
 
 class SublimeOCPIndex():
     local_cache = dict()
@@ -141,7 +141,8 @@ class SublimeOCPIndex():
                     results.append(('in\tkeyword', 'in'))
 
                 variants = re.sub(r"\n\s+", " ", output).split("\n")
-                print(variants)
+                if (DEBUG):
+                    print(variants)
 
                 def make_result(actual_replacement, replacement, rest):
                     return replacement + "\t" + rest.strip(), actual_replacement
