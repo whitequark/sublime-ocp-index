@@ -83,7 +83,7 @@ class SublimeOCPIndex():
 
             if view.file_name() != None:
                 (moduleName,) = re.search(r"(\w+)\.ml.*$", view.file_name()).groups()
-                module = moduleName.capitalize()
+                module = moduleName[0].upper() + moduleName[1:]
 
                 (line,col) = view.rowcol(location)
                 context = "%s:%d,%d" % (view.file_name(), line, col)
